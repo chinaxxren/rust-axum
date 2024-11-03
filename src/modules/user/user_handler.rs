@@ -14,9 +14,9 @@ use serde_json::json;
 
 use crate::{
     common::app_state::AppState,
+    modules::user::user_dao,
     modules::user::user_model::{LoginUserSchema, RegisterUserSchema, TokenClaims, User},
     modules::user::user_response::FilteredUser,
-    modules::user::user_dao,
 };
 
 pub async fn health_checker_handler() -> impl IntoResponse {
@@ -34,12 +34,13 @@ pub async fn register_user_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<RegisterUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let user_exists = user_dao::exists_user_by_email(&data, &body.email).await
+    let user_exists = user_dao::exists_user_by_email(&data, &body.email)
+        .await
         .map_err(|e| {
             let error_response = serde_json::json!({
-                    "status": "fail",
-                    "message": format!("Database error: {}", e),
-                });
+                "status": "fail",
+                "message": format!("Database error: {}", e),
+            });
             (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
         })?;
 
@@ -65,7 +66,13 @@ pub async fn register_user_handler(
         })
         .map(|hash| hash.to_string())?;
 
-    let user = user_dao::save_user(&data, &body.name.to_string(), &body.email.to_string().clone(), &hashed_password).await;
+    let user = user_dao::save_user(
+        &data,
+        &body.name.to_string(),
+        &body.email.to_string().clone(),
+        &hashed_password,
+    )
+    .await;
     let user = user.map_err(|e| {
         let error_response = serde_json::json!({
             "status": "fail",
@@ -130,7 +137,8 @@ pub async fn login_user_handler(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(data.env.jwt_secret.as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
     let cookie = Cookie::build("token")
         .path("/")
@@ -140,7 +148,9 @@ pub async fn login_user_handler(
         .build();
 
     let mut response = Response::new(json!({"status": "success", "token": token}).to_string());
-    response.headers_mut().insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
+    response
+        .headers_mut()
+        .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
     Ok(response)
 }
 
