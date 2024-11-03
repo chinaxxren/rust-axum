@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1730635580587,
@@ -16,6 +16,10 @@
                 {
                     "date": 1730635997348,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,4 @@\n-\n-\n use config::Config;\n use std::sync::Arc;\n \n use axum::http::{\n@@ -15,12 +13,8 @@\n use tracing::log::info;\n \n use modules::user::user_route;\n \n-pub struct AppState {\n-    db: Pool<Postgres>,\n-    env: Config,\n-}\n \n #[tokio::main]\n async fn main() -> Result<(), std::io::Error> {\n     dotenv().ok();\n"
+                },
+                {
+                    "date": 1730651425336,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,5 +1,4 @@\n-use config::Config;\n use std::sync::Arc;\n \n use axum::http::{\n     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},\n@@ -7,17 +6,16 @@\n };\n use dotenv::dotenv;\n use tower_http::cors::CorsLayer;\n \n-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};\n+use sqlx::{postgres::PgPoolOptions};\n use tokio::net::TcpListener;\n use tracing::log::info;\n+use rust_axum::common;\n+use rust_axum::modules::user::user_route;\n \n-use modules::user::user_route;\n-\n-\n #[tokio::main]\n-async fn main() -> Result<(), std::io::Error> {\n+async fn main() -> Result<(), AppError> {\n     dotenv().ok();\n     tracing_subscriber::fmt::init();\n \n     let config = Config::init();\n@@ -45,10 +43,29 @@\n \n     let app = user_route::create_router(Arc::new(AppState {\n         db: pool.clone(),\n         env: config.clone(),\n-    }))\n-    .layer(cors);\n+    })).layer(middleware::from_fn(\n+        request_response_logger::print_request_response,\n+    ))\n+   //建议使用 tower::ServiceBuilder 一次应用多个中间件，而不是重复调用layer（或route_layer）。\n+    //ServiceBuilder 的工作原理是将所有层组合成一个层，以便它们从上到下运行。\n+    //自上而下执行中间件通常更容易理解和遵循，这也是推荐使用 ServiceBuilder 的原因之一。\n+    .layer(\n+        ServiceBuilder::new()\n+            .layer(request_id::set_request_id())\n+            .layer(request_id::propagate_request_id())\n+            .layer(trace::trace())\n+            .layer(cors::cors()),\n+    );\n \n     let listener = TcpListener::bind(\"0.0.0.0:8000\").await?;\n-    axum::serve(listener, app).await\n+    axum::serve(listener, app).await?;\n+\n+    Ok(())\n }\n+\n+use crate::{\n+    common::config::Config,\n+    common::errors::AppError,\n+    common::app_state::AppState,\n+};\n"
                 }
             ],
             "date": 1730635580587,

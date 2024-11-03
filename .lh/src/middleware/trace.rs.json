@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/middleware/trace.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1730651168152,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1730651168152,
+            "name": "Commit-0",
+            "content": "use super::{DIRECT_CONNECT_IP, X_FORWARDED_FOR, X_REAL_IP, X_REQUEST_ID};\nuse axum::{extract::Request, http::HeaderName};\nuse std::net::SocketAddr;\nuse tower_http::{\n    classify::{ServerErrorsAsFailures, SharedClassifier},\n    trace::{MakeSpan, TraceLayer},\n};\nuse tracing::{Level, Span};\n\nconst DEFAULT_MESSAGE_LEVEL: Level = Level::DEBUG;\n\n#[derive(Debug, Clone)]\npub struct CustomMakeSpan {\n    level: Level,\n    include_headers: bool,\n}\n\nimpl CustomMakeSpan {\n    pub fn new() -> Self {\n        Self {\n            level: DEFAULT_MESSAGE_LEVEL,\n            include_headers: false,\n        }\n    }\n\n    pub fn level(mut self, level: Level) -> Self {\n        self.level = level;\n        self\n    }\n\n    pub fn include_headers(mut self, include_headers: bool) -> Self {\n        self.include_headers = include_headers;\n        self\n    }\n}\n\nimpl Default for CustomMakeSpan {\n    fn default() -> Self {\n        Self::new()\n    }\n}\n\nimpl<B> MakeSpan<B> for CustomMakeSpan {\n    fn make_span(&mut self, req: &Request<B>) -> Span {\n        let direct_connect_ip = req\n            .extensions()\n            .get::<axum::extract::connect_info::ConnectInfo<SocketAddr>>()\n            .map(|addr| addr.ip().to_string())\n            .unwrap_or(\"N/A\".to_string());\n        let header_value = |header_name: &'static str| {\n            req.headers()\n                .get(HeaderName::from_static(header_name))\n                .and_then(|value| value.to_str().ok())\n                .unwrap_or(\"N/A\")\n        };\n        macro_rules! make_span {\n            ($level:expr) => {\n                if self.include_headers {\n                    tracing::span!(\n                        $level,\n                        \"request\",\n                        {DIRECT_CONNECT_IP} = %direct_connect_ip,\n                        method = %req.method(),\n                        uri = %req.uri(),\n                        version = ?req.version(),\n                        headers = ?req.headers(),\n                    )\n                } else {\n                    tracing::span!(\n                        $level,\n                        \"request\",\n                        {DIRECT_CONNECT_IP} = %direct_connect_ip,\n                        {X_FORWARDED_FOR} = %header_value(X_FORWARDED_FOR),\n                        {X_REAL_IP} = %header_value(X_REAL_IP),\n                        {X_REQUEST_ID} = %header_value(X_REQUEST_ID),\n                        method = %req.method(),\n                        uri = %req.uri(),\n                        version = ?req.version(),\n                    )\n                }\n            }\n        }\n\n        match self.level {\n            Level::ERROR => make_span!(Level::ERROR),\n            Level::WARN => make_span!(Level::WARN),\n            Level::INFO => make_span!(Level::INFO),\n            Level::DEBUG => make_span!(Level::DEBUG),\n            Level::TRACE => make_span!(Level::TRACE),\n        }\n    }\n}\n\npub fn trace() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>, CustomMakeSpan> {\n    TraceLayer::new_for_http().make_span_with(CustomMakeSpan::default())\n}\n"
+        }
+    ]
+}

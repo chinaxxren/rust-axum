@@ -1604,6 +1604,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "futures-util",
+ "http-body-util",
  "jsonwebtoken",
  "rand_core",
  "serde",
@@ -1612,6 +1613,7 @@ dependencies = [
  "thiserror",
  "time",
  "tokio",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -2291,9 +2293,12 @@ dependencies = [
  "bitflags 2.6.0",
  "bytes",
  "http",
+ "http-body",
  "pin-project-lite",
  "tower-layer",
  "tower-service",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]

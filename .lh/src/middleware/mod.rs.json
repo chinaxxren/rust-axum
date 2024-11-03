@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/middleware/mod.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1730650944260,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1730650944260,
+            "name": "Commit-0",
+            "content": "pub mod cors;\npub mod request_id;\npub mod request_response_logger;\npub mod trace;\n\npub const DIRECT_CONNECT_IP: &str = \"direct-connect-ip\";\npub const X_FORWARDED_FOR: &str = \"x-forwarded-for\";\npub const X_REAL_IP: &str = \"x-real-ip\";\npub const X_REQUEST_ID: &str = \"x-request-id\";"
+        }
+    ]
+}

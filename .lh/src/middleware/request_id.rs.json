@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/middleware/request_id.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1730650907785,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1730650907785,
+            "name": "Commit-0",
+            "content": "use super::X_REQUEST_ID;\nuse axum::http::HeaderName;\nuse tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};\n\npub fn set_request_id() -> SetRequestIdLayer<MakeRequestUuid> {\n    SetRequestIdLayer::new(HeaderName::from_static(X_REQUEST_ID), MakeRequestUuid)\n}\n\npub fn propagate_request_id() -> PropagateRequestIdLayer {\n    PropagateRequestIdLayer::new(HeaderName::from_static(X_REQUEST_ID))\n}\n"
+        }
+    ]
+}
