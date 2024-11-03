@@ -34,18 +34,14 @@ pub async fn register_user_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<RegisterUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let user_exists: Option<bool> =
-        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")
-            .bind(body.email.to_owned().to_ascii_lowercase())
-            .fetch_one(&data.db)
-            .await
-            .map_err(|e| {
-                let error_response = serde_json::json!({
+    let user_exists = user_dao::exists_user_by_email(&data, &body.email).await
+        .map_err(|e| {
+            let error_response = serde_json::json!({
                     "status": "fail",
                     "message": format!("Database error: {}", e),
                 });
-                (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
-            })?;
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+        })?;
 
     if let Some(exists) = user_exists {
         if exists {
@@ -69,22 +65,14 @@ pub async fn register_user_handler(
         })
         .map(|hash| hash.to_string())?;
 
-    let user = sqlx::query_as!(
-        User,
-        "INSERT INTO users (name,email,password) VALUES ($1, $2, $3) RETURNING *",
-        body.name.to_string(),
-        body.email.to_string().to_ascii_lowercase(),
-        hashed_password
-    )
-        .fetch_one(&data.db)
-        .await
-        .map_err(|e| {
-            let error_response = serde_json::json!({
+    let user = user_dao::save_user(&data, &body.name.to_string(), &body.email.to_string().clone(), &hashed_password).await;
+    let user = user.map_err(|e| {
+        let error_response = serde_json::json!({
             "status": "fail",
             "message": format!("Database error: {}", e),
         });
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
-        })?;
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+    })?;
 
     let user_response = serde_json::json!({"status": "success","data": serde_json::json!({
         "user": filter_user_record(&user)
@@ -97,8 +85,7 @@ pub async fn login_user_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<LoginUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-
-    let user = user_dao::find_user_by_email(&data, body.email).await;
+    let user = user_dao::find_user_by_email(&data, &body.email).await;
     let user = user.map_err(|e| {
         let error_response = json!({
             "status": "error",

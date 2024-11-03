@@ -20,8 +20,8 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenClaims {
     pub sub: String,
-    pub iat: usize,
     pub exp: usize,
+    pub iat: usize,
 }
 
 #[derive(Debug, Deserialize)]

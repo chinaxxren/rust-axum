@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1730637080431,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730644189609,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,36 @@\n-use axum::http::StatusCode;\n-use axum::Json;\n-use sqlx::{Pool, Postgres, query_as};\n-use crate::commonjwt_auth::ErrorResponse;\n+// 查询用户\n+\n+use std::sync::Arc;\n+use uuid::Uuid;\n+use crate::common::app_state::AppState;\n+use crate::common::errors::AppError;\n use crate::modules::user::user_model::User;\n \n-// 查询用户\n+pub async fn exists_user_by_email(data: &Arc<AppState>, email: String) -> Result<bool, AppError> {\n+    let exists = sqlx::query_scalar(\"SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)\")\n+        .bind(email.to_ascii_lowercase())\n+        .fetch_one(&data.db)\n+        .await?;\n+    Ok(exists)\n+}\n+\n+pub async fn find_user_by_email(data: &Arc<AppState>, email: String) -> Result<Option<User>, AppError> {\n+    let user = sqlx::query_as!(User,\"SELECT * FROM users WHERE email = $1\",email.to_ascii_lowercase())\n+        .fetch_optional(&data.db)\n+        .await?;\n+    Ok(user)\n+}\n+\n+pub async fn find_user_by_id(data: &Arc<AppState>, user_id: Uuid) -> Result<Option<User>, AppError> {\n+    let user = sqlx::query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n+        .fetch_optional(&data.db)\n+        .await?;\n+    Ok(user)\n+}\n+\n+pub async fn save_user(data: &Arc<AppState>, name: String, email: String, password: String) -> Result<User>, AppError> {\n+    let user = sqlx::query_as!(User,\"INSERT INTO users (name,email,password) VALUES ($1, $2, $3) RETURNING *\",name,email.to_ascii_lowercase(),password)\n+        .fetch_one(&data.db)\n+        .await?;\n+    Ok(user)\n+}\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1730637080431,

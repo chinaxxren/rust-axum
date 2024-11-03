@@ -7,7 +7,7 @@ use axum::http::{
 use dotenv::dotenv;
 use tower_http::cors::CorsLayer;
 
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{postgres::PgPoolOptions};
 use tokio::net::TcpListener;
 use tracing::log::info;
 use rust_axum::common;
