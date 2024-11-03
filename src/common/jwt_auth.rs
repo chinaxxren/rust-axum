@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use axum::body::Body;
+use axum_extra::extract::cookie::CookieJar;
 use axum::{
     extract::State,
     http::{header, Request, StatusCode},
@@ -7,17 +9,16 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use axum::body::Body;
 
-use axum_extra::extract::cookie::CookieJar;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::Serialize;
 use sqlx::query_as;
 use uuid::Uuid;
 
 use crate::{
-    model::{TokenClaims, User},
-    AppState,
+    common::{app_state::AppState, errors::AppError},
+    modules::user::user_dao,
+    modules::user::user_model::{TokenClaims, User},
 };
 
 #[derive(Debug, Serialize)]
@@ -98,17 +99,14 @@ pub async fn auth(
         (StatusCode::UNAUTHORIZED, Json(json_error))
     })?;
 
-    // 查询数据库以获取用户
-    let user = query_as!(User, "SELECT * FROM users WHERE id = $1", user_id)
-        .fetch_optional(&data.db)
-        .await
-        .map_err(|e| {
-            let json_error = ErrorResponse {
-                status: "fail",
-                message: format!("从数据库获取用户时出错: {}", e),
-            };
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(json_error))
-        })?;
+    let user = user_dao::find_user_by_id(&data, user_id).await;
+    let user = user.map_err(|e| {
+        let json_error = ErrorResponse {
+            status: "fail",
+            message: format!("从数据库获取用户时出错: {:?}", e),
+        };
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json_error))
+    })?;
 
     // 处理用户不存在的错误
     let user = user.ok_or_else(|| {
@@ -123,3 +121,4 @@ pub async fn auth(
     req.extensions_mut().insert(user);
     Ok(next.run(req).await)
 }
+

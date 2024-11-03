@@ -1,0 +1,126 @@
+{
+    "sourceFile": "src/common/jwt_auth.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 27,
+            "patches": [
+                {
+                    "date": 1730637132145,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730637140575,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,10 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{modules::user::user_model::{TokenClaims, User}, \n-modules::user::user_dao, AppState, errors};\n+modules::user::user_dao, \n+commonAppState, errors};\n use crate::errors::BusinessError;\n \n #[derive(Debug, Serialize)]\n pub struct ErrorResponse {\n"
+                },
+                {
+                    "date": 1730637150268,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,9 +16,9 @@\n use uuid::Uuid;\n \n use crate::{modules::user::user_model::{TokenClaims, User}, \n modules::user::user_dao, \n-commonAppState, errors};\n+common::app_state::{AppState, errors};\n use crate::errors::BusinessError;\n \n #[derive(Debug, Serialize)]\n pub struct ErrorResponse {\n"
+                },
+                {
+                    "date": 1730637156803,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,25 +1,27 @@\n use std::sync::Arc;\n \n+use axum::body::Body;\n use axum::{\n     extract::State,\n     http::{header, Request, StatusCode},\n     middleware::Next,\n     response::IntoResponse,\n     Json,\n };\n-use axum::body::Body;\n \n use axum_extra::extract::cookie::CookieJar;\n use jsonwebtoken::{decode, DecodingKey, Validation};\n use serde::Serialize;\n use sqlx::query_as;\n use uuid::Uuid;\n \n-use crate::{modules::user::user_model::{TokenClaims, User}, \n-modules::user::user_dao, \n-common::app_state::{AppState, errors};\n use crate::errors::BusinessError;\n+use crate::{\n+    common::app_state::{errors, AppState},\n+    modules::user::user_dao,\n+    modules::user::user_model::{TokenClaims, User},\n+};\n \n #[derive(Debug, Serialize)]\n pub struct ErrorResponse {\n     pub status: &'static str,\n@@ -79,16 +81,16 @@\n         &token,\n         &DecodingKey::from_secret(data.env.jwt_secret.as_ref()),\n         &Validation::default(),\n     )\n-        .map_err(|_| {\n-            let json_error = ErrorResponse {\n-                status: \"fail\",\n-                message: \"无效的令牌\".to_string(),\n-            };\n-            (StatusCode::UNAUTHORIZED, Json(json_error))\n-        })?\n-        .claims;\n+    .map_err(|_| {\n+        let json_error = ErrorResponse {\n+            status: \"fail\",\n+            message: \"无效的令牌\".to_string(),\n+        };\n+        (StatusCode::UNAUTHORIZED, Json(json_error))\n+    })?\n+    .claims;\n \n     // 从令牌声明中解析用户 ID\n     let user_id = Uuid::parse_str(&claims.sub).map_err(|_| {\n         let json_error = ErrorResponse {\n@@ -120,9 +122,13 @@\n     req.extensions_mut().insert(user);\n     Ok(next.run(req).await)\n }\n \n-pub async fn find_user_by_uuid(data: &Arc<AppState>, user_id: Uuid) -> Result<Option<User>, BusinessError> {\n+pub async fn find_user_by_uuid(\n+    data: &Arc<AppState>,\n+    user_id: Uuid,\n+) -> Result<Option<User>, BusinessError> {\n\\ No newline at end of file\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n-        .fetch_optional(&data.db).await;\n+        .fetch_optional(&data.db)\n+        .await;\n     return Ok(user);\n-}\n+}\n"
+                },
+                {
+                    "date": 1730637179184,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,9 +16,9 @@\n use uuid::Uuid;\n \n use crate::errors::BusinessError;\n use crate::{\n-    common::app_state::{errors, AppState},\n+    common::app_state::{e, AppState},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n@@ -130,5 +130,5 @@\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return Ok(user);\n-}\n\\ No newline at end of file\n+}\n"
+                },
+                {
+                    "date": 1730637193135,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,9 +16,9 @@\n use uuid::Uuid;\n \n use crate::errors::BusinessError;\n use crate::{\n-    common::app_state::{e, AppState},\n+    common::app_state::{error::, AppState},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637201901,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,9 +16,9 @@\n use uuid::Uuid;\n \n use crate::errors::BusinessError;\n use crate::{\n-    common::app_state::{error::, AppState},\n+    common::app_state::AppState},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637217522,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,11 +14,11 @@\n use serde::Serialize;\n use sqlx::query_as;\n use uuid::Uuid;\n \n-use crate::errors::BusinessError;\n+use crate::jsonwebtoken::errors::BusinessError;\n use crate::{\n-    common::app_state::AppState},\n+    common::app_state::AppState,\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637251094,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n use serde::Serialize;\n use sqlx::query_as;\n use uuid::Uuid;\n \n-use crate::jsonwebtoken::errors::BusinessError;\n+use crate::;\n use crate::{\n     common::app_state::AppState,\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n"
+                },
+                {
+                    "date": 1730637257530,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,10 +14,10 @@\n use serde::Serialize;\n use sqlx::query_as;\n use uuid::Uuid;\n \n-use crate::;\n use crate::{\n+    errors::BusinessError,\n     common::app_state::AppState,\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n"
+                },
+                {
+                    "date": 1730637277343,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    errors::BusinessError,\n+    ,\n     common::app_state::AppState,\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n"
+                },
+                {
+                    "date": 1730637284223,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,10 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    ,\n-    common::app_state::AppState,\n+    common::{errors::BusinessError\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637291333,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{errors::BusinessError\n+    common::{app_state::AppState,errors::BusinessError\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637297808,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{app_state::AppState,errors::BusinessError\n+    common::{app_state::AppState,errors::BusinessError}\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637329529,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{app_state::AppState,errors::BusinessError}\n+    common::{app_state::AppState, errors::BusinessError},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730637669934,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -128,6 +128,5 @@\n ) -> Result<Option<User>, BusinessError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n-    return Ok(user);\n }\n"
+                },
+                {
+                    "date": 1730637675956,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -128,5 +128,6 @@\n ) -> Result<Option<User>, BusinessError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n+    return user;\n }\n"
+                },
+                {
+                    "date": 1730638073109,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -124,9 +124,9 @@\n \n pub async fn find_user_by_uuid(\n     data: &Arc<AppState>,\n     user_id: Uuid,\n-) -> Result<Option<User>, BusinessError> {\n+) -> Result<Option<User>, DBError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return user;\n"
+                },
+                {
+                    "date": 1730638097665,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -18,8 +18,9 @@\n use crate::{\n     common::{app_state::AppState, errors::BusinessError},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n+    \n };\n \n #[derive(Debug, Serialize)]\n pub struct ErrorResponse {\n"
+                },
+                {
+                    "date": 1730638105571,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,12 +15,11 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{app_state::AppState, errors::BusinessError},\n+    common::{app_state::AppState, errors::DBError},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n-    \n };\n \n #[derive(Debug, Serialize)]\n pub struct ErrorResponse {\n"
+                },
+                {
+                    "date": 1730638122757,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{app_state::AppState, errors::DBError},\n+    common::{app_state::AppState, errors::Error},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730638138889,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -124,9 +124,9 @@\n \n pub async fn find_user_by_uuid(\n     data: &Arc<AppState>,\n     user_id: Uuid,\n-) -> Result<Option<User>, DBError> {\n+) -> Result<Option<User>, ErrorDBError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return user;\n"
+                },
+                {
+                    "date": 1730638175488,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,10 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{app_state::AppState, errors::Error},\n+    common::{\n+        app_state::AppState, errors::Error},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n@@ -124,9 +125,9 @@\n \n pub async fn find_user_by_uuid(\n     data: &Arc<AppState>,\n     user_id: Uuid,\n-) -> Result<Option<User>, ErrorDBError> {\n+) -> Result<Option<User>, Error::DBError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return user;\n"
+                },
+                {
+                    "date": 1730638181222,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,9 +16,10 @@\n use uuid::Uuid;\n \n use crate::{\n     common::{\n-        app_state::AppState, errors::Error},\n+        app_state::AppState, \n+        errors::Error},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730638187670,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,9 +17,10 @@\n \n use crate::{\n     common::{\n         app_state::AppState, \n-        errors::Error},\n+        errors::Error\n+    },\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730638195912,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,12 +15,9 @@\n use sqlx::query_as;\n use uuid::Uuid;\n \n use crate::{\n-    common::{\n-        app_state::AppState, \n-        errors::Error\n-    },\n+    common::{app_state::AppState, errors::Error},\n     modules::user::user_dao,\n     modules::user::user_model::{TokenClaims, User},\n };\n \n"
+                },
+                {
+                    "date": 1730638220703,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -124,9 +124,9 @@\n \n pub async fn find_user_by_uuid(\n     data: &Arc<AppState>,\n     user_id: Uuid,\n-) -> Result<Option<User>, Error::DBError> {\n+) -> Result<Option<User>, Error> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return user;\n"
+                },
+                {
+                    "date": 1730638227301,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -124,9 +124,9 @@\n \n pub async fn find_user_by_uuid(\n     data: &Arc<AppState>,\n     user_id: Uuid,\n-) -> Result<Option<User>, Error> {\n+) -> Result<Option<User>, Error::DbError> {\n     let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n         .fetch_optional(&data.db)\n         .await;\n     return user;\n"
+                }
+            ],
+            "date": 1730637132145,
+            "name": "Commit-0",
+            "content": "use std::sync::Arc;\n\nuse axum::{\n    extract::State,\n    http::{header, Request, StatusCode},\n    middleware::Next,\n    response::IntoResponse,\n    Json,\n};\nuse axum::body::Body;\n\nuse axum_extra::extract::cookie::CookieJar;\nuse jsonwebtoken::{decode, DecodingKey, Validation};\nuse serde::Serialize;\nuse sqlx::query_as;\nuse uuid::Uuid;\n\nuse crate::{modules::user::user_model::{TokenClaims, User}, \nmodules::user::user_dao, AppState, errors};\nuse crate::errors::BusinessError;\n\n#[derive(Debug, Serialize)]\npub struct ErrorResponse {\n    pub status: &'static str,\n    pub message: String,\n}\n\n/// 执行用户身份验证，通过验证用户的令牌并获取用户信息。\n///\n/// 该函数首先尝试从请求的 cookies 或请求头中获取用户的令牌。\n/// 然后解码和验证令牌，提取用户的 ID，并查询数据库以获取用户信息。\n/// 如果任何步骤失败，将返回相应的错误响应。\n/// 否则，将用户信息添加到请求中，并传递控制权给下一个处理程序。\n///\n/// - `cookie_jar`: 包含请求中的所有 cookies，用于获取令牌。\n/// - `State(data)`: 在请求之间共享的应用状态，包含数据库和环境信息。\n/// - `mut req`: 进来的请求，可能在头部包含令牌。\n/// - `next`: 处理完此中间件后传递控制权的下一个中间件或处理程序。\n///\n/// 返回:\n/// - 成功时: 下一个处理程序执行的结果。\n/// - 失败时: 表示身份验证失败原因的 HTTP 状态码和错误消息。\npub async fn auth(\n    cookie_jar: CookieJar,\n    State(data): State<Arc<AppState>>,\n    mut req: Request<Body>,\n    next: Next,\n) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {\n    // 尝试从 cookies 中获取令牌\n    let token = cookie_jar\n        .get(\"token\")\n        .map(|cookie| cookie.value().to_string())\n        .or_else(|| {\n            // 尝试从请求头中获取令牌\n            req.headers()\n                .get(header::AUTHORIZATION)\n                .and_then(|auth_header| auth_header.to_str().ok())\n                .and_then(|auth_value| {\n                    if auth_value.starts_with(\"Bearer \") {\n                        Some(auth_value[7..].to_owned())\n                    } else {\n                        None\n                    }\n                })\n        });\n\n    // 处理缺少令牌的错误\n    let token = token.ok_or_else(|| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"您未登录，请提供令牌\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    // 解码和验证令牌\n    let claims = decode::<TokenClaims>(\n        &token,\n        &DecodingKey::from_secret(data.env.jwt_secret.as_ref()),\n        &Validation::default(),\n    )\n        .map_err(|_| {\n            let json_error = ErrorResponse {\n                status: \"fail\",\n                message: \"无效的令牌\".to_string(),\n            };\n            (StatusCode::UNAUTHORIZED, Json(json_error))\n        })?\n        .claims;\n\n    // 从令牌声明中解析用户 ID\n    let user_id = Uuid::parse_str(&claims.sub).map_err(|_| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"无效的令牌\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    let user = find_user_by_uuid(&data, user_id).await;\n    let user = user.map_err(|e| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: format!(\"从数据库获取用户时出错: {:?}\", e),\n        };\n        (StatusCode::INTERNAL_SERVER_ERROR, Json(json_error))\n    })?;\n\n    // 处理用户不存在的错误\n    let user = user.ok_or_else(|| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"属于此令牌的用户已不存在\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    // 将用户信息添加到请求中，并传递控制权给下一个处理程序\n    req.extensions_mut().insert(user);\n    Ok(next.run(req).await)\n}\n\npub async fn find_user_by_uuid(data: &Arc<AppState>, user_id: Uuid) -> Result<Option<User>, BusinessError> {\n    let user = query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n        .fetch_optional(&data.db).await;\n    return Ok(user);\n}"
+        }
+    ]
+}

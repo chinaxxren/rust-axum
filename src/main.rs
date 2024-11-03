@@ -1,11 +1,3 @@
-mod config;
-mod handler;
-mod jwt_auth;
-mod model;
-mod response;
-mod route;
-
-use config::Config;
 use std::sync::Arc;
 
 use axum::http::{
@@ -13,20 +5,22 @@ use axum::http::{
     HeaderValue, Method,
 };
 use dotenv::dotenv;
-use route::create_router;
 use tower_http::cors::CorsLayer;
 
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::net::TcpListener;
 use tracing::log::info;
+use rust_axum::common;
+use rust_axum::modules::user::user_route;
 
-pub struct AppState {
-    db: Pool<Postgres>,
-    env: Config,
-}
+use crate::{
+    common::config::Config,
+    common::errors::AppError,
+    common::app_state::AppState,
+};
 
 #[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
+async fn main() -> Result<(), AppError> {
     dotenv().ok();
     tracing_subscriber::fmt::init();
 
@@ -53,12 +47,14 @@ async fn main() -> Result<(), std::io::Error> {
         .allow_credentials(true)
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
-    let app = create_router(Arc::new(AppState {
+    let app = user_route::create_router(Arc::new(AppState {
         db: pool.clone(),
         env: config.clone(),
     }))
-    .layer(cors);
+        .layer(cors);
 
     let listener = TcpListener::bind("0.0.0.0:8000").await?;
-    axum::serve(listener, app).await
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }

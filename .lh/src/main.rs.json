@@ -1,0 +1,26 @@
+{
+    "sourceFile": "src/main.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1730635580587,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730635638044,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,6 @@\n-mod config;\n-mod jwt_auth;\n-mod errors;\n \n+\n use config::Config;\n use std::sync::Arc;\n \n use axum::http::{\n"
+                },
+                {
+                    "date": 1730635997348,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,4 @@\n-\n-\n use config::Config;\n use std::sync::Arc;\n \n use axum::http::{\n@@ -15,12 +13,8 @@\n use tracing::log::info;\n \n use modules::user::user_route;\n \n-pub struct AppState {\n-    db: Pool<Postgres>,\n-    env: Config,\n-}\n \n #[tokio::main]\n async fn main() -> Result<(), std::io::Error> {\n     dotenv().ok();\n"
+                }
+            ],
+            "date": 1730635580587,
+            "name": "Commit-0",
+            "content": "mod config;\nmod jwt_auth;\nmod errors;\n\nuse config::Config;\nuse std::sync::Arc;\n\nuse axum::http::{\n    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},\n    HeaderValue, Method,\n};\nuse dotenv::dotenv;\nuse tower_http::cors::CorsLayer;\n\nuse sqlx::{postgres::PgPoolOptions, Pool, Postgres};\nuse tokio::net::TcpListener;\nuse tracing::log::info;\n\nuse modules::user::user_route;\n\npub struct AppState {\n    db: Pool<Postgres>,\n    env: Config,\n}\n\n#[tokio::main]\nasync fn main() -> Result<(), std::io::Error> {\n    dotenv().ok();\n    tracing_subscriber::fmt::init();\n\n    let config = Config::init();\n\n    let pool = match PgPoolOptions::new()\n        .max_connections(10)\n        .connect(&config.database_url)\n        .await\n    {\n        Ok(pool) => {\n            info!(\"✅Connection to the database is successful!\");\n            pool\n        }\n        Err(err) => {\n            info!(\"🔥 Failed to connect to the database: {:?}\", err);\n            std::process::exit(1);\n        }\n    };\n\n    let cors = CorsLayer::new()\n        .allow_origin(\"http://localhost:3000\".parse::<HeaderValue>().unwrap())\n        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])\n        .allow_credentials(true)\n        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);\n\n    let app = user_route::create_router(Arc::new(AppState {\n        db: pool.clone(),\n        env: config.clone(),\n    }))\n    .layer(cors);\n\n    let listener = TcpListener::bind(\"0.0.0.0:8000\").await?;\n    axum::serve(listener, app).await\n}\n"
+        }
+    ]
+}

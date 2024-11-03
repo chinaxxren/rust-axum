@@ -1,0 +1,30 @@
+{
+    "sourceFile": "src/modules/user/user_route.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1730637052462,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730637058074,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,9 +10,9 @@\n     modules::user::user_handler::{\n         get_me_handler, health_checker_handler, login_user_handler, logout_handler,\n         register_user_handler,\n     },\n-    comjwt_auth::auth,\n+    common::jwt_auth::auth,\n     AppState,\n };\n \n pub fn create_router(app_state: Arc<AppState>) -> Router {\n"
+                },
+                {
+                    "date": 1730637063233,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -11,9 +11,9 @@\n         get_me_handler, health_checker_handler, login_user_handler, logout_handler,\n         register_user_handler,\n     },\n     common::jwt_auth::auth,\n-    AppState,\n+    commonAppState,\n };\n \n pub fn create_router(app_state: Arc<AppState>) -> Router {\n     Router::new()\n"
+                },
+                {
+                    "date": 1730637069801,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -11,9 +11,9 @@\n         get_me_handler, health_checker_handler, login_user_handler, logout_handler,\n         register_user_handler,\n     },\n     common::jwt_auth::auth,\n-    commonAppState,\n+    common::app_state::AppState,\n };\n \n pub fn create_router(app_state: Arc<AppState>) -> Router {\n     Router::new()\n"
+                }
+            ],
+            "date": 1730637052462,
+            "name": "Commit-0",
+            "content": "use std::sync::Arc;\n\nuse axum::{\n    middleware,\n    routing::{get, post},\n    Router,\n};\n\nuse crate::{\n    modules::user::user_handler::{\n        get_me_handler, health_checker_handler, login_user_handler, logout_handler,\n        register_user_handler,\n    },\n    comjwt_auth::auth,\n    AppState,\n};\n\npub fn create_router(app_state: Arc<AppState>) -> Router {\n    Router::new()\n        .route(\"/api/healthchecker\", get(health_checker_handler))\n        .route(\"/api/auth/register\", post(register_user_handler))\n        .route(\"/api/auth/login\", post(login_user_handler))\n        .route(\n            \"/api/auth/logout\",\n            get(logout_handler)\n                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),\n        )\n        .route(\n            \"/api/users/me\",\n            get(get_me_handler)\n                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),\n        )\n        .with_state(app_state)\n}\n"
+        }
+    ]
+}

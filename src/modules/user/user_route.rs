@@ -7,12 +7,12 @@ use axum::{
 };
 
 use crate::{
-    handler::{
+    modules::user::user_handler::{
         get_me_handler, health_checker_handler, login_user_handler, logout_handler,
         register_user_handler,
     },
-    jwt_auth::auth,
-    AppState,
+    common::jwt_auth::auth,
+    common::app_state::AppState,
 };
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {

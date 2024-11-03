@@ -1,0 +1,22 @@
+{
+    "sourceFile": "src/modules/user/mod.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1730620834299,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730620848826,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,1 +1,1 @@\n-pub mod \n\\ No newline at end of file\n+pub mod user_handle;\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1730620834299,
+            "name": "Commit-0",
+            "content": "pub mod "
+        }
+    ]
+}

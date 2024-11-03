@@ -1,0 +1,46 @@
+{
+    "sourceFile": "src/common/app_state.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 7,
+            "patches": [
+                {
+                    "date": 1730636002658,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730637514948,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,12 @@\n+use sqlx::{Pool, Postgres};\n+use crate::common::config::Config;\n \n-\n pub struct AppState {\n     db: Pool<Postgres>,\n     env: Config,\n+}\n+\n+impl AppState {\n+\n+    \n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1730637521819,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,6 +7,6 @@\n }\n \n impl AppState {\n \n-    \n+    pub\n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1730637527794,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,6 +7,6 @@\n }\n \n impl AppState {\n \n-    pub\n+    pub fn db(&self) -> &Pool<Postgres> {\n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1730637533199,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -8,5 +8,8 @@\n \n impl AppState {\n \n     pub fn db(&self) -> &Pool<Postgres> {\n+        &self.db\n+    }\n+    \n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1730637538494,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,6 +10,9 @@\n \n     pub fn db(&self) -> &Pool<Postgres> {\n         &self.db\n     }\n-    \n+\n+    pub fn env(&self) -> &Config {\n+        &self.env\n+    }\n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1730637595107,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,9 @@\n use sqlx::{Pool, Postgres};\n use crate::common::config::Config;\n \n pub struct AppState {\n-    db: Pool<Postgres>,\n+    pub db: Pool<Postgres>,\n     env: Config,\n }\n \n impl AppState {\n"
+                },
+                {
+                    "date": 1730637602495,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,9 +2,9 @@\n use crate::common::config::Config;\n \n pub struct AppState {\n     pub db: Pool<Postgres>,\n-    env: Config,\n+    pub env: Config,\n }\n \n impl AppState {\n \n"
+                }
+            ],
+            "date": 1730636002658,
+            "name": "Commit-0",
+            "content": "\n\npub struct AppState {\n    db: Pool<Postgres>,\n    env: Config,\n}"
+        }
+    ]
+}

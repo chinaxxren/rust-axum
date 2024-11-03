@@ -13,9 +13,10 @@ use rand_core::OsRng;
 use serde_json::json;
 
 use crate::{
-    model::{LoginUserSchema, RegisterUserSchema, TokenClaims, User},
-    response::FilteredUser,
-    AppState,
+    common::app_state::AppState,
+    modules::user::user_model::{LoginUserSchema, RegisterUserSchema, TokenClaims, User},
+    modules::user::user_response::FilteredUser,
+    modules::user::user_dao,
 };
 
 pub async fn health_checker_handler() -> impl IntoResponse {
@@ -75,15 +76,15 @@ pub async fn register_user_handler(
         body.email.to_string().to_ascii_lowercase(),
         hashed_password
     )
-    .fetch_one(&data.db)
-    .await
-    .map_err(|e| {
-        let error_response = serde_json::json!({
+        .fetch_one(&data.db)
+        .await
+        .map_err(|e| {
+            let error_response = serde_json::json!({
             "status": "fail",
             "message": format!("Database error: {}", e),
         });
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
-    })?;
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+        })?;
 
     let user_response = serde_json::json!({"status": "success","data": serde_json::json!({
         "user": filter_user_record(&user)
@@ -96,22 +97,18 @@ pub async fn login_user_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<LoginUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let user = sqlx::query_as!(
-        User,
-        "SELECT * FROM users WHERE email = $1",
-        body.email.to_ascii_lowercase()
-    )
-    .fetch_optional(&data.db)
-    .await
-    .map_err(|e| {
-        let error_response = serde_json::json!({
+
+    let user = user_dao::find_user_by_email(&data, body.email).await;
+    let user = user.map_err(|e| {
+        let error_response = json!({
             "status": "error",
             "message": format!("Database error: {}", e),
         });
         (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
-    })?
-    .ok_or_else(|| {
-        let error_response = serde_json::json!({
+    })?;
+
+    let user = user.ok_or_else(|| {
+        let error_response = json!({
             "status": "fail",
             "message": "Invalid email or password",
         });
@@ -126,7 +123,7 @@ pub async fn login_user_handler(
     };
 
     if !is_valid {
-        let error_response = serde_json::json!({
+        let error_response = json!({
             "status": "fail",
             "message": "Invalid email or password"
         });
@@ -146,20 +143,17 @@ pub async fn login_user_handler(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(data.env.jwt_secret.as_ref()),
-    )
-    .unwrap();
+    ).unwrap();
 
     let cookie = Cookie::build("token")
         .path("/")
         .max_age(time::Duration::hours(1))
         .same_site(SameSite::Lax)
         .http_only(true)
-        .finish();
+        .build();
 
     let mut response = Response::new(json!({"status": "success", "token": token}).to_string());
-    response
-        .headers_mut()
-        .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
+    response.headers_mut().insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
     Ok(response)
 }
 
@@ -169,7 +163,7 @@ pub async fn logout_handler() -> Result<impl IntoResponse, (StatusCode, Json<ser
         .max_age(time::Duration::hours(-1))
         .same_site(SameSite::Lax)
         .http_only(true)
-        .finish();
+        .build();
 
     let mut response = Response::new(json!({"status": "success"}).to_string());
     response
