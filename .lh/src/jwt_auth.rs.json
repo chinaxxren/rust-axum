@@ -1,0 +1,38 @@
+{
+    "sourceFile": "src/jwt_auth.rs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 5,
+            "patches": [
+                {
+                    "date": 1730614544716,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730614552155,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -25,9 +25,9 @@\n \n pub async fn auth<B>(\n     cookie_jar: CookieJar,\n     State(data): State<Arc<AppState>>,\n-    mut req: Request,\n+    mut req: Request<B>,\n     next: Next<B>,\n ) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {\n     let token = cookie_jar\n         .get(\"token\")\n"
+                },
+                {
+                    "date": 1730614686518,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -26,9 +26,9 @@\n pub async fn auth<B>(\n     cookie_jar: CookieJar,\n     State(data): State<Arc<AppState>>,\n     mut req: Request<B>,\n-    next: Next<B>,\n+    next: Next,\n ) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {\n     let token = cookie_jar\n         .get(\"token\")\n         .map(|cookie| cookie.value().to_string())\n@@ -94,6 +94,6 @@\n         (StatusCode::UNAUTHORIZED, Json(json_error))\n     })?;\n \n     req.extensions_mut().insert(user);\n-    Ok(next.run(req).await)\n+    Ok(x)\n }\n"
+                },
+                {
+                    "date": 1730614694682,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -94,6 +94,7 @@\n         (StatusCode::UNAUTHORIZED, Json(json_error))\n     })?;\n \n     req.extensions_mut().insert(user);\n-    Ok(x)\n+    let res = next.run(req).await\n+    Ok()\n }\n"
+                },
+                {
+                    "date": 1730614706740,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -94,7 +94,7 @@\n         (StatusCode::UNAUTHORIZED, Json(json_error))\n     })?;\n \n     req.extensions_mut().insert(user);\n-    let res = next.run(req).await\n-    Ok()\n+    let res = next.run(req).await;\n+    Ok(res)\n }\n"
+                },
+                {
+                    "date": 1730615466354,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -26,9 +26,9 @@\n pub async fn auth<B>(\n     cookie_jar: CookieJar,\n     State(data): State<Arc<AppState>>,\n     mut req: Request<B>,\n-    next: Next,\n+    next: Next<B>,\n ) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {\n     let token = cookie_jar\n         .get(\"token\")\n         .map(|cookie| cookie.value().to_string())\n@@ -94,7 +94,6 @@\n         (StatusCode::UNAUTHORIZED, Json(json_error))\n     })?;\n \n     req.extensions_mut().insert(user);\n-    let res = next.run(req).await;\n-    Ok(res)\n+    Ok(next.run(req).await)\n }\n"
+                }
+            ],
+            "date": 1730614544716,
+            "name": "Commit-0",
+            "content": "use std::sync::Arc;\n\nuse axum::{\n    extract::State,\n    http::{header, Request, StatusCode},\n    middleware::Next,\n    response::IntoResponse,\n    Json,\n};\n\nuse axum_extra::extract::cookie::CookieJar;\nuse jsonwebtoken::{decode, DecodingKey, Validation};\nuse serde::Serialize;\n\nuse crate::{\n    model::{TokenClaims, User},\n    AppState,\n};\n\n#[derive(Debug, Serialize)]\npub struct ErrorResponse {\n    pub status: &'static str,\n    pub message: String,\n}\n\npub async fn auth<B>(\n    cookie_jar: CookieJar,\n    State(data): State<Arc<AppState>>,\n    mut req: Request,\n    next: Next<B>,\n) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {\n    let token = cookie_jar\n        .get(\"token\")\n        .map(|cookie| cookie.value().to_string())\n        .or_else(|| {\n            req.headers()\n                .get(header::AUTHORIZATION)\n                .and_then(|auth_header| auth_header.to_str().ok())\n                .and_then(|auth_value| {\n                    if auth_value.starts_with(\"Bearer \") {\n                        Some(auth_value[7..].to_owned())\n                    } else {\n                        None\n                    }\n                })\n        });\n\n    let token = token.ok_or_else(|| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"You are not logged in, please provide token\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    let claims = decode::<TokenClaims>(\n        &token,\n        &DecodingKey::from_secret(data.env.jwt_secret.as_ref()),\n        &Validation::default(),\n    )\n    .map_err(|_| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"Invalid token\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?\n    .claims;\n\n    let user_id = uuid::Uuid::parse_str(&claims.sub).map_err(|_| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"Invalid token\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    let user = sqlx::query_as!(User, \"SELECT * FROM users WHERE id = $1\", user_id)\n        .fetch_optional(&data.db)\n        .await\n        .map_err(|e| {\n            let json_error = ErrorResponse {\n                status: \"fail\",\n                message: format!(\"Error fetching user from database: {}\", e),\n            };\n            (StatusCode::INTERNAL_SERVER_ERROR, Json(json_error))\n        })?;\n\n    let user = user.ok_or_else(|| {\n        let json_error = ErrorResponse {\n            status: \"fail\",\n            message: \"The user belonging to this token no longer exists\".to_string(),\n        };\n        (StatusCode::UNAUTHORIZED, Json(json_error))\n    })?;\n\n    req.extensions_mut().insert(user);\n    Ok(next.run(req).await)\n}\n"
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+{
+    "sourceFile": "Cargo.toml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 6,
+            "patches": [
+                {
+                    "date": 1730610058440,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1730610117560,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,6 @@\n [package]\n-name = \"rust-axum-jwt-auth\"\n+name = \"rust-axum\"\n version = \"0.1.0\"\n edition = \"2021\"\n \n # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n@@ -15,8 +15,8 @@\n rand_core = { version = \"0.6.4\", features = [\"std\"] }\n serde = { version = \"1.0.159\", features = [\"derive\"] }\n serde_json = \"1.0.95\"\n sqlx = { version = \"0.6.3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\n-time = \"0.3.\"\n+time = \"0.3.35\"\n tokio = { version = \"1.27.0\", features = [\"full\"] }\n tower-http = { version = \"0.4.0\", features = [\"cors\"] }\n uuid = { version = \"1.3.0\", features = [\"serde\", \"v4\"] }\n"
+                },
+                {
+                    "date": 1730614343223,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,9 +10,9 @@\n axum = \"0.6.12\"\n axum-extra = { version = \"0.7.2\", features = [\"cookie\"] }\n chrono = { version = \"0.4.24\", features = [\"serde\"] }\n dotenv = \"0.15.0\"\n-jsonwebtoken = \"8.3.0\"\n+jsonwebtoken = \"9.3.0\"\n rand_core = { version = \"0.6.4\", features = [\"std\"] }\n serde = { version = \"1.0.159\", features = [\"derive\"] }\n serde_json = \"1.0.95\"\n sqlx = { version = \"0.6.3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\n"
+                },
+                {
+                    "date": 1730614350498,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -6,9 +6,9 @@\n # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n \n [dependencies]\n argon2 = \"0.5.0\"\n-axum = \"0.6.12\"\n+axum = \"0.7.7\"\n axum-extra = { version = \"0.7.2\", features = [\"cookie\"] }\n chrono = { version = \"0.4.24\", features = [\"serde\"] }\n dotenv = \"0.15.0\"\n jsonwebtoken = \"9.3.0\"\n"
+                },
+                {
+                    "date": 1730614356672,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n \n [dependencies]\n argon2 = \"0.5.0\"\n axum = \"0.7.7\"\n-axum-extra = { version = \"0.7.2\", features = [\"cookie\"] }\n+axum-extra = { version = \"0.9.\", features = [\"cookie\"] }\n chrono = { version = \"0.4.24\", features = [\"serde\"] }\n dotenv = \"0.15.0\"\n jsonwebtoken = \"9.3.0\"\n rand_core = { version = \"0.6.4\", features = [\"std\"] }\n"
+                },
+                {
+                    "date": 1730614365871,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n \n [dependencies]\n argon2 = \"0.5.0\"\n axum = \"0.7.7\"\n-axum-extra = { version = \"0.9.\", features = [\"cookie\"] }\n+axum-extra = { version = \"0.9.4\", features = [\"cookie\"] }\n chrono = { version = \"0.4.24\", features = [\"serde\"] }\n dotenv = \"0.15.0\"\n jsonwebtoken = \"9.3.0\"\n rand_core = { version = \"0.6.4\", features = [\"std\"] }\n@@ -17,6 +17,6 @@\n serde_json = \"1.0.95\"\n sqlx = { version = \"0.6.3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\n time = \"0.3.35\"\n tokio = { version = \"1.27.0\", features = [\"full\"] }\n-tower-http = { version = \"0.4.0\", features = [\"cors\"] }\n+tower-http = { version = \"0.6.0\", features = [\"cors\"] }\n uuid = { version = \"1.3.0\", features = [\"serde\", \"v4\"] }\n"
+                },
+                {
+                    "date": 1730614372602,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n jsonwebtoken = \"9.3.0\"\n rand_core = { version = \"0.6.4\", features = [\"std\"] }\n serde = { version = \"1.0.159\", features = [\"derive\"] }\n serde_json = \"1.0.95\"\n-sqlx = { version = \"0.6.3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\n+sqlx = { version = \"0..3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\n time = \"0.3.35\"\n tokio = { version = \"1.27.0\", features = [\"full\"] }\n-tower-http = { version = \"0.6.0\", features = [\"cors\"] }\n+tower-http = { version = \"0.6.1\", features = [\"cors\"] }\n uuid = { version = \"1.3.0\", features = [\"serde\", \"v4\"] }\n"
+                }
+            ],
+            "date": 1730610058440,
+            "name": "Commit-0",
+            "content": "[package]\nname = \"rust-axum-jwt-auth\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n\n[dependencies]\nargon2 = \"0.5.0\"\naxum = \"0.6.12\"\naxum-extra = { version = \"0.7.2\", features = [\"cookie\"] }\nchrono = { version = \"0.4.24\", features = [\"serde\"] }\ndotenv = \"0.15.0\"\njsonwebtoken = \"8.3.0\"\nrand_core = { version = \"0.6.4\", features = [\"std\"] }\nserde = { version = \"1.0.159\", features = [\"derive\"] }\nserde_json = \"1.0.95\"\nsqlx = { version = \"0.6.3\", features = [\"runtime-async-std-native-tls\", \"postgres\", \"chrono\", \"uuid\"] }\ntime = \"0.3.\"\ntokio = { version = \"1.27.0\", features = [\"full\"] }\ntower-http = { version = \"0.4.0\", features = [\"cors\"] }\nuuid = { version = \"1.3.0\", features = [\"serde\", \"v4\"] }\n"
+        }
+    ]
+}
